@@ -1,12 +1,23 @@
 import './App.css';
-import React,{useState} from 'react';
+import React,{useState,useEffect} from 'react';
 import AuthApi from './AuthApi';
+import Cookies from 'js-cookie';
 import{
   BrowserRouter as Router , 
   Switch, Link,Route, Redirect
 } from 'react-router-dom';
+
 function App() {
-  const [auth,setAuth] = useState(false)
+  const [auth,setAuth] = useState(false);
+  const user = Cookies.get("user");
+  useEffect(() => {
+    if(user){
+         setAuth(true);
+    }else{
+      setAuth(false)
+    }
+    
+  }, [])
   return (
     <div className="App">
         <AuthApi.Provider value={{auth,setAuth}}>
@@ -22,6 +33,7 @@ const Login =() =>{
   const Auth = React.useContext(AuthApi);
   const LoginHandler = () =>{
     Auth.setAuth(true);
+    Cookies.set("user","LoginTrue")
   }
   return(<div>
     <p>This is Login Page </p>
@@ -32,7 +44,8 @@ const Login =() =>{
 const Dashboard =() =>{
   const Auth = React.useContext(AuthApi);
   const LogoutHandler = () =>{
-    Auth.setAuth(true);
+    Auth.setAuth(false);
+    Cookies.remove("user")
   }
   return(<div>
     <h1>This is a Dashboard.</h1>
@@ -45,13 +58,15 @@ const MainFile = () =>{
     <div>This is Main File</div>
     )
 }
+
+// Routing 
 const Routes = () =>{
   const Auth = React.useContext(AuthApi);
 
   return (
     <Switch>
       <ProtectedLogin path ="/login" auth={Auth.auth} component ={Login } />
-      <ProtectedRoute path ="/dashboard" component ={Dashboard} />
+      <ProtectedRoute path ="/dashboard"  auth={Auth.auth} component ={Dashboard} />
       <Route path ="/" component ={MainFile} />
     </Switch>
   )
